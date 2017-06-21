@@ -41,7 +41,9 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                   box(title = "LD",
                                       tableOutput("LDtable1"),
                                       h5(helpText("See link below for TAD information!")),
-                                      uiOutput("hic1")))
+                                      uiOutput("hic1"),
+                                      uiOutput("clinical1"),
+                                      uiOutput("ucsc1")))
                                 )),
                         tabItem(tabName = "tab2",
                                 fluidRow(
@@ -104,6 +106,18 @@ server <- function(input, output) {
       a("Take me to HIC", href=paste0("http://promoter.bx.psu.edu/hi-c/view.php?species=human&assembly=hg19&source=inside&tissue=GM12878&type=Lieberman-raw&resolution=25&c_url=&transfer=&gene=",x,"&sessionID=&browser=none"), target="_blank")
     }
     })
+  
+  output$clinical1<-renderUI({
+    x<-snps()
+    y<-dat()
+    a("Take me to ClinVar", href=paste0("https://www.ncbi.nlm.nih.gov/clinvar/?term=",y$chr[1],"%5Bchr%5D+AND+",min(y$pos_hg38),"%3A",max(y$pos_hg38),"%5Bchrpos37%5D"), target="_blank")
+  })
+  
+  output$ucsc1<-renderUI({
+    x<-snps()
+    y<-dat()
+    a("Take me to Genome Browser", href=paste0("https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&lastVirtModeType=default&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=chr",y$chr[1],"%3A",min(y$pos_hg38),"%2D",max(y$pos_hg38),"&hgsid=596717155_di6qMTAMSs8fhJcRiuqsjlcsIxKA"), target="_blank")
+  })
   
   output$LDtable1<-renderTable({
     x<-dat()
