@@ -40,7 +40,6 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                   column(12,align="center",offset=2,
                                   box(title = "Output",
                                       tableOutput("LDtable1"),
-                                      h5(helpText("See link below for TAD information!")),
                                       uiOutput("hic1"),
                                       uiOutput("clinical1"),
                                       uiOutput("ucsc1")))
