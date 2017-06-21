@@ -38,7 +38,7 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                 ),
                                 fluidRow(
                                   column(12,align="center",offset=2,
-                                  box(title = "LD",
+                                  box(title = "Output",
                                       tableOutput("LDtable1"),
                                       h5(helpText("See link below for TAD information!")),
                                       uiOutput("hic1"),
@@ -110,13 +110,21 @@ server <- function(input, output) {
   output$clinical1<-renderUI({
     x<-snps()
     y<-dat()
-    a("Take me to ClinVar", href=paste0("https://www.ncbi.nlm.nih.gov/clinvar/?term=",y$chr[1],"%5Bchr%5D+AND+",min(y$pos_hg38),"%3A",max(y$pos_hg38),"%5Bchrpos37%5D"), target="_blank")
+    if (length(x)>1){
+    a("Take me to ClinVar", href=paste0("https://www.ncbi.nlm.nih.gov/clinvar/?term=",max(as.numeric(y$chr),na.rm = TRUE),"%5Bchr%5D+AND+",min(as.numeric(y$pos_hg38),na.rm=TRUE),"%3A",max(as.numeric(y$pos_hg38),na.rm=TRUE),"%5Bchrpos37%5D"), target="_blank")
+    } else if (length(x)==1){
+      a("Take me to ClinVar", href=paste0("https://www.ncbi.nlm.nih.gov/clinvar/?term=",max(as.numeric(y$chr),na.rm = TRUE),"%5Bchr%5D+AND+",min((as.numeric(y$pos_hg38)),na.rm=TRUE)-53500,"%3A",max((as.numeric(y$pos_hg38)),na.rm=TRUE)+53500,"%5Bchrpos37%5D"), target="_blank")
+    }
   })
   
   output$ucsc1<-renderUI({
     x<-snps()
     y<-dat()
-    a("Take me to Genome Browser", href=paste0("https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&lastVirtModeType=default&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=chr",y$chr[1],"%3A",min(y$pos_hg38),"%2D",max(y$pos_hg38),"&hgsid=596717155_di6qMTAMSs8fhJcRiuqsjlcsIxKA"), target="_blank")
+    if (length(x)>1){
+    a("Take me to Genome Browser", href=paste0("https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&lastVirtModeType=default&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=chr",max(as.numeric(y$chr),na.rm = TRUE),"%3A",min(as.numeric(y$pos_hg38),na.rm=TRUE),"%2D",max(as.numeric(y$pos_hg38),na.rm=TRUE),"&hgsid=596717155_di6qMTAMSs8fhJcRiuqsjlcsIxKA"), target="_blank")
+    }else if (length(x)==1){
+      a("Take me to Genome Browser", href=paste0("https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&lastVirtModeType=default&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=chr",max(as.numeric(y$chr),na.rm = TRUE),"%3A",min((as.numeric(y$pos_hg38)),na.rm=TRUE)-53500,"%2D",max((as.numeric(y$pos_hg38)),na.rm=TRUE)+53500,"&hgsid=596717155_di6qMTAMSs8fhJcRiuqsjlcsIxKA"), target="_blank")
+    }
   })
   
   output$LDtable1<-renderTable({
