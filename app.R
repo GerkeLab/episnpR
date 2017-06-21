@@ -19,28 +19,21 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                                          'text/comma-separated-values,text/plain', 
                                                          '.csv')),
                                       tags$hr(),
-                                      h5(helpText("Select file parameters:")),
-                                      checkboxInput(inputId = 'header1', label= 'Header', value= TRUE),
-                                      br(),
-                                      radioButtons(inputId = 'sep1', label = 'Seperator', 
-                                                   choices = c(Comma=',', Semicolon=';', Tab='\t', Space= ' '), 
-                                                   selected= ','),
                                       actionButton("update1", "Perform query")),
                                   box(title="Select Output",
                                       selectInput("pop","Population",c("EUR","AFR","AMR","ASN"), selected="EUR"),
                                       sliderInput("value","LD threshold",min=0,max=1,value=0.8),
-                                      selectInput("parameters","Additional Output",c("chr","pos_hg38",                         
-                                                                           "D'","is_query_snp",                       
-                                                                           "ref","alt","AFR",                        
-                                                                           "AMR","ASN","EUR",                        
+                                      checkboxGroupInput("parameters","Additional Output",c("Chromosome"="chr","Position"="pos_hg38",                         
+                                                                                            "D'"="D'","Query SNP"="is_query_snp",                       
+                                                                          "Reference allele"="ref","Alternative allele"="alt","MAF(AFR)"="AFR",                        
+                                                                          "MAF(AMR)"="AMR","MAF(ASN)"="ASN","MAF(EUR)"="EUR",                        
                                                                            "GERP_cons","SiPhy_cons","Chromatin_States",           
                                                                            "Chromatin_States_Imputed","Chromatin_Marks","DNAse",                      
                                                                            "Proteins","eQTL","gwas",                       
                                                                            "grasp","Motifs","GENCODE_id",                 
                                                                            "GENCODE_name","GENCODE_direction","GENCODE_distance",           
                                                                            "RefSeq_id","RefSeq_name","RefSeq_direction",           
-                                                                           "RefSeq_distance","dbSNP_functional_annotation"),
-                                                  multiple=TRUE)
+                                                                           "RefSeq_distance","dbSNP_functional_annotation"),inline = TRUE)
                                       )
                                 ),
                                 fluidRow(
@@ -53,8 +46,9 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                         tabItem(tabName = "tab2",
                                 fluidRow(
                                   box(title="App Details",
-                                      h5(helpText("All of the data from this site come from various online resources such as the 1000 Genome Project and ENCODE.
-                                                  To perform similar queries in R please check out the haploR package!"))),
+                                      h5(helpText("LD is calculated from 1000 Genomes Phase 1 (http://www.internationalgenome.org), and queried from HaploReg (http://archive.broadinstitute.org/mammals/haploreg/haploreg.php)
+                                                  To perform similar queries in R please check out the haploR package!
+                                                  TAD visualization comes from the Yue Lab (http://promoter.bx.psu.edu/hi-c/)"))),
                                   box(title="Development Team",
                                       h5(helpText("Programming: Jordan Creed, Travis Gerke")),
                                       h5(helpText("Scientific Input: Alvaro Monteiro")),
@@ -71,7 +65,7 @@ server <- function(input, output) {
   sample<-eventReactive(input$update1,{
     samplefile<-input$file1
     if(is.null(samplefile)){return()}
-    sample1<-read.table(file=samplefile$datapath, sep= input$sep1, header= input$header1,stringsAsFactors= FALSE)
+    sample1<-read.table(file=samplefile$datapath, sep= "\t", header= FALSE,stringsAsFactors= FALSE)
   })
 
   dat<-eventReactive(input$update1,{
