@@ -1,4 +1,4 @@
-.libPaths(c("~/Documents/Rpackages",.libPaths()))
+#.libPaths(c("~/Documents/Rpackages",.libPaths()))
 library(shinydashboard)
 library(shiny)
 library(haploR)
@@ -12,7 +12,7 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                         tabItem(tabName = "tab1",
                                 fluidRow(
                                   box(title = "Query SNPs",
-                                      textInput("snpList","Enter SNP rsIDs (comma seperated)",value=""),
+                                      textInput("snpList","Enter SNP rsIDs (comma separated)",value=""),
                                       h5(helpText("Upload SNP List (one SNP per line)")),
                                       fileInput("file1","Choose a file",
                                                 accept=c('text/csv', 
@@ -25,8 +25,8 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                       sliderInput("value","LD threshold",min=0,max=1,value=0.8),
                                       checkboxGroupInput("parameters","Additional Output",c("Chromosome"="chr","Position"="pos_hg38",                         
                                                                                             "D'"="D'","Query SNP"="is_query_snp",                       
-                                                                          "Reference allele"="ref","Alternative allele"="alt","MAF(AFR)"="AFR",                        
-                                                                          "MAF(AMR)"="AMR","MAF(ASN)"="ASN","MAF(EUR)"="EUR",                        
+                                                                          "Reference allele"="ref","Alternative allele"="alt","LD(AFR)"="AFR",                        
+                                                                          "LD(AMR)"="AMR","LD(ASN)"="ASN","LD(EUR)"="EUR",                        
                                                                            "GERP_cons","SiPhy_cons","Chromatin_States",           
                                                                            "Chromatin_States_Imputed","Chromatin_Marks","DNAse",                      
                                                                            "Proteins","eQTL","gwas",                       
