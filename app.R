@@ -1,4 +1,4 @@
-#.libPaths(c("~/Documents/Rpackages",.libPaths()))
+.libPaths(c("~/Documents/Rpackages",.libPaths()))
 library(shinydashboard)
 library(shiny)
 library(haploR)
@@ -25,7 +25,7 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                       radioButtons(inputId = 'sep1', label = 'Seperator', 
                                                    choices = c(Comma=',', Semicolon=';', Tab='\t', Space= ' '), 
                                                    selected= ','),
-                                      actionButton("upload1", "Upload File")),
+                                      actionButton("update1", "Perform query")),
                                   box(title="Select Output",
                                       selectInput("pop","Population",c("EUR","AFR","AMR","ASN"), selected="EUR"),
                                       sliderInput("value","LD threshold",min=0,max=1,value=0.8),
@@ -40,8 +40,7 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                                                            "GENCODE_name","GENCODE_direction","GENCODE_distance",           
                                                                            "RefSeq_id","RefSeq_name","RefSeq_direction",           
                                                                            "RefSeq_distance","dbSNP_functional_annotation"),
-                                                  multiple=TRUE),
-                                      actionButton("update1","Show Table")
+                                                  multiple=TRUE)
                                       )
                                 ),
                                 fluidRow(
@@ -67,7 +66,7 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
 
 ###################################################################################################
 server <- function(input, output) {
-  sample<-eventReactive(input$upload1,{
+  sample<-eventReactive(input$update1,{
     samplefile<-input$file1
     if(is.null(samplefile)){return()}
     sample1<-read.table(file=samplefile$datapath, sep= input$sep1, header= input$header1,stringsAsFactors= FALSE)
