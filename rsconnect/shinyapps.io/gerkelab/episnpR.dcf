@@ -3,9 +3,9 @@ title: episnpR
 account: gerkelab
 server: shinyapps.io
 appId: 191246
-bundleId: 877197
+bundleId: 877318
 url: https://gerkelab.shinyapps.io/episnpR/
-when: 1498070412.70556
+when: 1498075139.64714
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: README.md
