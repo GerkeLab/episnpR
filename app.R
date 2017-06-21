@@ -54,8 +54,10 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                 fluidRow(
                                   box(title="App Details",
                                       h5(helpText("All of the data from this site come from various online resources such as the 1000 Genome Project and ENCODE.
-                                                  To perform similar queries in R please check out the haploR package!")),
-                                      h5(helpText("Contact: Jordan.H.Creed@moffitt.org")),
+                                                  To perform similar queries in R please check out the haploR package!"))),
+                                  box(title="Development Team",
+                                      h5(helpText("Programming: Jordan Creed, Travis Gerke")),
+                                      h5(helpText("Scientific Input: Alvaro Monteiro")),
                                       h5(helpText("Website: http://travisgerke.com"))),
                                   box(title="Other resources",
                                       h5(helpText("Aiden Lab")),
