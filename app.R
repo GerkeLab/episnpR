@@ -3,7 +3,7 @@ library(shinydashboard)
 library(shiny)
 library(haploR)
 ###################################################################################################
-ui <- dashboardPage(dashboardHeader(title="Linkage Disequilibrium"),
+ui <- dashboardPage(dashboardHeader(title="episnpR"),
                     dashboardSidebar(sidebarMenu(id="tabs",
                                                  menuItem("SNPs",tabName = "tab1"),
                                                  menuItem("Info",tabName = "tab2"))),
@@ -11,9 +11,8 @@ ui <- dashboardPage(dashboardHeader(title="Linkage Disequilibrium"),
                       tabItems(
                         tabItem(tabName = "tab1",
                                 fluidRow(
-                                  box(title = "SNP List",
-                                      h5(helpText("Fill in SNP")),
-                                      textInput("snpList","SNPs",value=""),
+                                  box(title = "Query SNPs",
+                                      textInput("snpList","Enter SNP rsIDs (comma seperated)",value=""),
                                       h5(helpText("Upload SNP List (one SNP per line)")),
                                       fileInput("file1","Choose a file",
                                                 accept=c('text/csv', 
