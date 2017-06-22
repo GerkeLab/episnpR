@@ -1,7 +1,8 @@
-#.libPaths(c("~/Documents/Rpackages",.libPaths()))
+.libPaths(c("~/Documents/Rpackages",.libPaths()))
 library(shinydashboard)
 library(shiny)
 library(haploR)
+library(data.table)
 ###################################################################################################
 ui <- dashboardPage(dashboardHeader(title="episnpR"),
                     dashboardSidebar(sidebarMenu(id="tabs",
@@ -38,18 +39,25 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                 ),
                                 fluidRow(
                                   column(12,align="center",offset=2,
-                                  box(title = "Output",
-                                      tableOutput("LDtable1"),
-                                      uiOutput("hic1"),
+                                  tabBox(title = "Output",
+                                    tabPanel("LD",
+                                      tableOutput("LDtable1")),
+                                    tabPanel("TADs",
+                                      actionButton("tadButton","Look up TADs"),
+                                      textOutput("tadBoundaries"),
+                                      uiOutput("hic1")),
+                                    tabPanel("Other",
                                       uiOutput("clinical1"),
-                                      uiOutput("ucsc1")))
+                                      uiOutput("ucsc1"))))
                                 )),
                         tabItem(tabName = "tab2",
                                 fluidRow(
                                   box(title="App Details",
                                       h5(helpText("LD is calculated from 1000 Genomes Phase 1 (http://www.internationalgenome.org), and queried from HaploReg (http://archive.broadinstitute.org/mammals/haploreg/haploreg.php)
                                                   To perform similar queries in R please check out the haploR package!
-                                                  TAD visualization comes from the Yue Lab (http://promoter.bx.psu.edu/hi-c/)"))),
+                                                  TAD visualization comes from the Yue Lab (http://promoter.bx.psu.edu/hi-c/).
+                                                  TAD locations are based off of those defined by Dixon et al in 'Topological domains in mammalian genomes identified by analysis of chromatin interactions'"
+                                                  ))),
                                   box(title="Development Team",
                                       h5(helpText("Programming: Jordan Creed, Travis Gerke")),
                                       h5(helpText("Scientific Input: Alvaro Monteiro")),
@@ -94,6 +102,23 @@ server <- function(input, output) {
       snps<-as.character(unlist(strsplit(input$snpList,",")))
       return(snps)
     }
+  })
+  
+  in_tad<-eventReactive(input$tadButton,{
+    load("./Data/tad_hg19.Rdata")
+    snps<-snps()
+    dat<-dat()
+    dat<-dat[dat$rsID %in% snps,]
+    snp_pos<-as.numeric(dat$pos_hg38)
+    tad<-tad[tad$chr==max(as.numeric(dat$chr),na.rm=TRUE),]
+    in_tad<-tad[between(snp_pos,tad$start_position, tad$end_position)]
+    return(in_tad)
+  })
+
+  output$tadBoundaries<-renderText({
+    in_tad<-in_tad()
+    if(nrow(in_tad)<1){return(paste0("In a TAD!"))}
+    else({return(paste0("Not in a TAD"))})
   })
   
   output$hic1<-renderUI({
