@@ -4,6 +4,7 @@ library(haploR)
 library(data.table)
 library(biomaRt)
 library(ggplot2)
+library(shinycssloaders)
 #library(ggrepel)
 library(plotly)
 ###################################################################################################
@@ -27,8 +28,8 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                   box(title="Select Output",
                                       selectInput("pop","Population",c("EUR","AFR","AMR","ASN"), selected="EUR"),
                                       sliderInput("value","LD threshold",min=0,max=1,value=0.8),
-                                      h5(helpText("HaploReg")),
-                                      checkboxGroupInput("parameters","Additional Output",c("Chromosome"="chr","Position"="pos_hg38",                         
+                                      br(),
+                                      checkboxGroupInput("parameters","HaploR",c("Chromosome"="chr","Position"="pos_hg38",                         
                                                                                             "D'"="D'","Query SNP"="is_query_snp",                       
                                                                                             "Reference allele"="ref","Alternative allele"="alt","LD(AFR)"="AFR",                        
                                                                                             "LD(AMR)"="AMR","LD(ASN)"="ASN","LD(EUR)"="EUR",                        
@@ -39,23 +40,24 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                                                                             "GENCODE gene name"="GENCODE_name","GENCODE direction"="GENCODE_direction","GENCODE distance"="GENCODE_distance",           
                                                                                             "NCBI Reference Sequence Accession number"="RefSeq_id","NCBI Reference Sequence name"="RefSeq_name","NCBI Reference Sequence direction"="RefSeq_direction",           
                                                                                             "NCBI Reference Sequence distance"="RefSeq_distance","Annotated proteins"="dbSNP_functional_annotation"),inline = TRUE),
-                                      h5(helpText("Regulome")),
-                                      checkboxGroupInput("parameters2","Regulome Output",c("Chromosome"="#chromosome",
+                                      br(),
+                                      checkboxGroupInput("parameters2","Regulome",c("Chromosome"="#chromosome",
                                                                                            "Coordinates"="coordinates",
                                                                                            "Hits"="hits", "Score"="score_anno")),
-                                      h5(helpText("eQTL")),
+                                      h5(helpText("Tissues")),
                                       uiOutput("eTissues")
                                   )
                                 ),
                                 fluidRow(
-                                  column(12,align="center",offset=2,
+                                  column(12,align="center",offset=3,
                                          tabBox(title = "Output",
                                                 tabPanel("HaploReg",
                                                          tableOutput("LDtable1")),
                                                 tabPanel("RegulomeDB",
                                                          tableOutput("LDtable2")),
                                                 tabPanel("eQTL",
-                                                         tableOutput("eTable1")), 
+                                                         tableOutput("eTable1"),
+                                                         uiOutput("eqtl1")), 
                                                 tabPanel("TADs",
                                                          actionButton("tadButton","Look up TADs"),
                                                          textOutput("tadBoundaries"),
@@ -64,8 +66,8 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                                          uiOutput("clinical1"),
                                                          uiOutput("ucsc1")),
                                                 tabPanel("Visuals",
-                                                         plotlyOutput("plot1",height="450px"))))
-                                )),
+                                                         withSpinner(plotlyOutput("plot1",height="450px"),color = "#00ffff", type = 6)))
+                                ))),
                         tabItem(tabName = "tab2",
                                 fluidRow(
                                   box(title="App Details",
@@ -255,6 +257,18 @@ server <- function(input, output) {
     }
   })
   
+  output$eqtl1<-renderUI({
+    x<-snps()
+    y<-dat()
+    if (length(x)>1){
+      a("Take me to GTEx", href=paste0("https://www.gtexportal.org/home/browseEqtls?location=chr",max(as.numeric(y$chr),na.rm = TRUE),":",min((as.numeric(y$pos_hg38)),na.rm=TRUE),"-",max((as.numeric(y$pos_hg38)),na.rm=TRUE)), target="_blank")
+    } else if (length(x)==1){
+      a("Take me to GTEx", href=paste0("https://www.gtexportal.org/home/snp/",x), target="_blank")
+    }
+  })
+  
+  
+  
   output$LDtable1<-renderTable({
     x<-dat()
     #x<-x[,input$parameters]
@@ -289,22 +303,22 @@ server <- function(input, output) {
     ldBlocks<-ggplot(ld)+
       geom_segment(data=ld,aes(x=min(ld$pos_hg38,na.rm = TRUE),y=1,xend=max(ld$pos_hg38,na.rm = TRUE),yend=1, color=as.factor(ld$query_snp_rsid), size=30))+ 
       geom_vline(data = query_snps, aes(xintercept=pos_hg38)) +
-      geom_vline(data = ld_snps, aes(xintercept=pos_hg38, alpha=0.1))+ # add different color from query snps to make more visible?
-      #geom_segment(data=tad, aes(x=tad$start_position, y=2, xend=tad$end_position, yend=2, size=30))+
-      geom_segment(data=genes,aes(x=start_position,y=3,xend=end_position,yend=3,color=hgnc_symbol,size=30,alpha=0.1))+
-      #geom_label_repel(data=genes, mapping=aes(x=(start_position+end_position)/2, y=3, label=hgnc_symbol,color=hgnc_symbol), size=3)+
+      geom_vline(data = ld_snps, aes(xintercept=pos_hg38, alpha=0.1), color="grey")+ # add different color from query snps to make more visible?
+      geom_segment(data=genes,aes(x=start_position,y=3,xend=end_position,yend=3,color=hgnc_symbol,size=30),alpha=0.5)+
+      annotate("text",x=x_min, y=1.25, label="LD", color="purple", angle=90)+
+      annotate("text",x=x_min, y=3.25, label="Genes", color="purple", angle=90)+
+      annotate("text",x=x_min, y=2.25, label="TADs", color="purple", angle=90)+
       theme(legend.position = "none",axis.text.y=element_blank(),axis.title.y=element_blank(),panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
             panel.border = element_blank(),
             panel.background = element_blank()) + 
-      xlab("BP") + coord_cartesian(ylim=c(0,4))+
-      scale_y_continuous(breaks = c(1,2,3,4)) 
+      xlab("BP") + coord_cartesian(ylim=c(0.75,3.5))+
+      scale_y_continuous(breaks = c(1,2,3)) 
     
-  
     if(nrow(tad)>=1){
-       ldBlocks<-ldBlocks + geom_segment(data=tad, aes(x=tad$start_position, y=2, xend=tad$end_position, yend=2, size=30))
+      ldBlocks<-ldBlocks + geom_segment(data=tad, aes(x=tad$start_position, y=2, xend=tad$end_position, yend=2, size=30))
     } else {ldBlocks<-ldBlocks}
-   
+
     #return(ldBlocks)
     ggplotly(ldBlocks) %>% 
       layout(autosize=TRUE)
