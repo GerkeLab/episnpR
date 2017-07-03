@@ -7,6 +7,7 @@ library(ggplot2)
 library(shinycssloaders)
 #library(ggrepel)
 library(plotly)
+library(jsonlite)
 ###################################################################################################
 ui <- dashboardPage(dashboardHeader(title="episnpR"),
                     dashboardSidebar(sidebarMenu(id="tabs",
@@ -45,7 +46,49 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                                                                            "Coordinates"="coordinates",
                                                                                            "Hits"="hits", "Score"="score_anno")),
                                       h5(helpText("Tissues")),
-                                      uiOutput("eTissues")
+                                      uiOutput("eTissues"),
+                                      br(),
+                                      checkboxGroupInput("oncoParameters","Oncotator",c("ACHILLES_Lineage_Results_Top_Genes","CCLE_By_Gene_total_mutations_in_gene",  
+                                                                                        "CGC_Cancer.Germline.Mut","CGC_Cancer.Molecular.Genetics",             
+                                                                                        "CGC_Cancer.Somatic.Mut","CGC_Cancer.Syndrome",                       
+                                                                                        "CGC_Chr","CGC_Chr.Band",                              
+                                                                                        "CGC_GeneID","CGC_Mutation.Type",                         
+                                                                                        "CGC_Name","CGC_Other.Germline.Mut",                    
+                                                                                        "CGC_Other.Syndrome.Disease","CGC_Tissue.Type",                           
+                                                                                        "CGC_Translocation.Partner","CGC_Tumour.Types...Somatic.Mutations.",     
+                                                                                        "CGC_Tumour.Types..Germline.Mutations.","COSMIC_FusionGenes_fusion_genes",           
+                                                                                        "COSMIC_Tissue_tissue_types_affected","COSMIC_Tissue_total_alterations_in_gene",   
+                                                                                        "Familial_Cancer_Genes_Reference","Familial_Cancer_Genes_Syndrome",            
+                                                                                        "Familial_Cancer_Genes_Synonym","HGNC_Accession.Numbers",                   
+                                                                                        "HGNC_Approved.Name","HGNC_CCDS.IDs",                             
+                                                                                        "HGNC_Chromosome","HGNC_Date.Modified",                        
+                                                                                        "HGNC_Date.Name.Changed","HGNC_Date.Symbol.Changed",                  
+                                                                                        "HGNC_Ensembl.Gene.ID","HGNC_Ensembl.ID.supplied.by.Ensembl.",      
+                                                                                        "HGNC_Entrez.Gene.ID","HGNC_Entrez.Gene.ID.supplied.by.NCBI.",     
+                                                                                        "HGNC_Enzyme.IDs","HGNC_Gene.family.description",              
+                                                                                        "HGNC_HGNC.ID","HGNC_Locus.Group",                          
+                                                                                        "HGNC_Locus.Type","HGNC_Name.Synonyms",                        
+                                                                                        "HGNC_OMIM.ID.supplied.by.NCBI.","HGNC_Previous.Names",                      
+                                                                                        "HGNC_Previous.Symbols","HGNC_Primary.IDs",                          
+                                                                                        "HGNC_Pubmed.IDs","HGNC_Record.Type",                          
+                                                                                        "HGNC_RefSeq.IDs","HGNC_RefSeq.supplied.by.NCBI.",            
+                                                                                        "HGNC_Secondary.IDs","HGNC_Status",                               
+                                                                                        "HGNC_Synonyms","HGNC_UCSC.ID.supplied.by.UCSC." ,           
+                                                                                        "HGNC_UniProt.ID.supplied.by.UniProt.","HGNC_VEGA.IDs",                            
+                                                                                        "HumanDNARepairGenes_Role","MutSig.Published.Results_Published_Results",
+                                                                                        "TCGAScape_Amplification_Peaks","TCGAScape_Deletion_Peaks",                  
+                                                                                        "TUMORScape_Amplification_Peaks","TUMORScape_Deletion_Peaks",                 
+                                                                                        "UniProt_AA_experimental_info","UniProt_AA_natural_variation",              
+                                                                                        "UniProt_AA_region","UniProt_AA_site",                           
+                                                                                        "UniProt_DrugBank","UniProt_GO_Biological_Process",             
+                                                                                        "UniProt_GO_Cellular_Component","UniProt_GO_Molecular_Function",            
+                                                                                        "UniProt_alt_uniprot_accessions","UniProt_uniprot_accession",                 
+                                                                                        "UniProt_uniprot_entry_name","alt_allele",                                
+                                                                                        "build","chr",                                      
+                                                                                        "class","end",                                       
+                                                                                        "gene","protein_change",                            
+                                                                                        "ref_allele","start",                                     
+                                                                                        "strand","transcripts" ), inline=TRUE)
                                   )
                                 ),
                                 fluidRow(
@@ -55,6 +98,8 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                                          tableOutput("LDtable1")),
                                                 tabPanel("RegulomeDB",
                                                          tableOutput("LDtable2")),
+                                                tabPanel("Oncotator",
+                                                         tableOutput("oncoTable")),
                                                 tabPanel("eQTL",
                                                          tableOutput("eTable1"),
                                                          uiOutput("eqtl1")), 
@@ -279,6 +324,26 @@ server <- function(input, output) {
   output$LDtable2<-renderTable({
     x<-dat2()
     x[,c("rsid",input$parameters2)]
+  })
+  
+  output$oncoTable<-renderTable({
+    ld<-dat()
+    chr<-min(ld$chr,na.rm=TRUE)
+    min<-min(ld$pos_hg38,na.rm=TRUE)
+    max<-max(ld$pos_hg38,na.rm=TRUE)
+    
+    x<-fromJSON(paste0("http://portals.broadinstitute.org/oncotator/genes/",chr,"_",min,"_",max,"/"))
+    
+    genes<-as.data.frame(x[[1]])
+    
+    for (i in 2:length(x)){
+      gene_dat<-as.data.frame(x[[i]])
+      genes<-rbind(genes, gene_dat)
+    }
+    
+    genes<-genes[,c("gene",input$oncoParameters)]
+    return(genes)
+    
   })
   
   output$plot1<-renderPlotly({
