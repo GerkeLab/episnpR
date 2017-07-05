@@ -101,8 +101,7 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                                 tabPanel("RegulomeDB",
                                                          tableOutput("LDtable2")),
                                                 tabPanel("TADs",
-                                                         actionButton("tadButton","Look up TADs"),
-                                                         textOutput("tadBoundaries"),
+                                                         withSpinner(textOutput("tadBoundaries"), color="#00ffff", type = 6),
                                                          uiOutput("hic1"))
                                                 ),
                                   tabBox(title="Gene Annotation",
@@ -252,7 +251,7 @@ server <- function(input, output) {
     }
   })
   
-  in_tad<-eventReactive(input$tadButton,{
+  in_tad<-eventReactive(input$update1,{
     tad<-fread("http://compbio.med.harvard.edu/modencode/webpage/hic/IMR90_domains_hg19.bed")
     colnames(tad)<-c("chr","start_position","end_position")
     tad$chr<-gsub("chr","",tad$chr)
@@ -264,11 +263,6 @@ server <- function(input, output) {
     snp_pos<-as.numeric(dat$pos_hg38)
     tad<-tad[tad$chr==max(as.numeric(dat$chr),na.rm=TRUE),]
     in_tad<-tad[between(snp_pos,tad$start_position, tad$end_position)]
-    # if(nrow(in_tad>=1)){
-    #   tad_region<-paste0(in_tad$chr,":",in_tad$start_position,":",in_tad$end_position)
-    #   genes<-getBM(attributes = c("hgnc_symbol","start_position","end_position"),
-    #                filters=c("chromosomal_region"), values=tad_region,mart = ensembl54)
-    # }
     return(in_tad)
   })
   
@@ -289,41 +283,71 @@ server <- function(input, output) {
     return(etest3[etest3$Tissue %in% input$tissue,])
   })
   
+  total_min<-eventReactive(input$update1,{
+    tad<-in_tad()
+    dat<-dat()
+    if(nrow(tad)>=1){
+      total_min<-min(c(min(as.numeric(dat$pos_hg38),na.rm=TRUE), tad$start_position))
+      return(as.numeric(total_min))
+    }
+    else if (nrow(tad)<1 & nrow(dat)>1){
+      total_min<-min(as.numeric(dat$pos_hg38),na.rm=TRUE) 
+      return(as.numeric(total_min))}
+    else {
+      total_min<-min(as.numeric(dat$pos_hg38),na.rm=TRUE)-53500 
+      return(as.numeric(total_min))}
+  })
+  
+  total_max<-eventReactive(input$update1,{
+    tad<-in_tad()
+    dat<-dat()
+    if(nrow(tad)>=1){
+      total_max<-max(c(max(as.numeric(dat$pos_hg38),na.rm=TRUE), tad$end_position))
+      return(as.numeric(total_max))
+    }
+    else if (nrow(tad)<1 & nrow(dat)>1){
+      total_max<-max(as.numeric(dat$pos_hg38),na.rm=TRUE) 
+      return(as.numeric(total_max))}
+    else {
+      total_max<-max(as.numeric(dat$pos_hg38),na.rm=TRUE) + 53500
+      return(as.numeric(total_max))}
+  })
+  
   output$hic1<-renderUI({
     x<-snps()
     y<-dat()
+    total_min<-total_min()
+    total_max<-total_max()
     if (length(x)>1){
-      a("Take me to HIC", href=paste0("http://promoter.bx.psu.edu/hi-c/view.php?species=human&assembly=hg19&source=inside&tissue=GM12878&type=Lieberman-raw&c_url=&transfer=&chr=chr",y$chr[1],"&start=",min(y$pos_hg38),"&end=",max(y$pos_hg38),"&sessionID=&browser=none"), target="_blank")
+      a("Take me to HIC Browser", href=paste0("http://promoter.bx.psu.edu/hi-c/view.php?species=human&assembly=hg19&source=inside&tissue=GM12878&type=Lieberman-raw&c_url=&transfer=&chr=chr",y$chr[1],"&start=",total_min,"&end=",total_max,"&sessionID=&browser=none"), target="_blank")
     } else if (length(x)==1){
-      a("Take me to HIC", href=paste0("http://promoter.bx.psu.edu/hi-c/view.php?species=human&assembly=hg19&source=inside&tissue=GM12878&type=Lieberman-raw&resolution=25&c_url=&transfer=&gene=",x,"&sessionID=&browser=none"), target="_blank")
+      a("Take me to HIC Browser", href=paste0("http://promoter.bx.psu.edu/hi-c/view.php?species=human&assembly=hg19&source=inside&tissue=GM12878&type=Lieberman-raw&resolution=25&c_url=&transfer=&gene=",x,"&sessionID=&browser=none"), target="_blank")
     }
   })
   
   output$clinical1<-renderUI({
     x<-snps()
     y<-dat()
-    if (length(x)>1){
-      a("Take me to ClinVar", href=paste0("https://www.ncbi.nlm.nih.gov/clinvar/?term=",max(as.numeric(y$chr),na.rm = TRUE),"%5Bchr%5D+AND+",min(as.numeric(y$pos_hg38),na.rm=TRUE),"%3A",max(as.numeric(y$pos_hg38),na.rm=TRUE),"%5Bchrpos37%5D"), target="_blank")
-    } else if (length(x)==1){
-      a("Take me to ClinVar", href=paste0("https://www.ncbi.nlm.nih.gov/clinvar/?term=",max(as.numeric(y$chr),na.rm = TRUE),"%5Bchr%5D+AND+",min((as.numeric(y$pos_hg38)),na.rm=TRUE)-53500,"%3A",max((as.numeric(y$pos_hg38)),na.rm=TRUE)+53500,"%5Bchrpos37%5D"), target="_blank")
-    }
+    total_min<-total_min()
+    total_max<-total_max()
+    a("Take me to ClinVar", href=paste0("https://www.ncbi.nlm.nih.gov/clinvar/?term=",max(as.numeric(y$chr),na.rm = TRUE),"%5Bchr%5D+AND+",total_min,"%3A",total_max,"%5Bchrpos37%5D"), target="_blank")
   })
   
   output$ucsc1<-renderUI({
     x<-snps()
     y<-dat()
-    if (length(x)>1){
-      a("Take me to Genome Browser", href=paste0("https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&lastVirtModeType=default&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=chr",max(as.numeric(y$chr),na.rm = TRUE),"%3A",min(as.numeric(y$pos_hg38),na.rm=TRUE),"%2D",max(as.numeric(y$pos_hg38),na.rm=TRUE),"&hgsid=598506407_cis2LZUJLabCsy1N2YPEuJv8vbBZ"), target="_blank")
-    }else if (length(x)==1){
-      a("Take me to Genome Browser", href=paste0("https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&lastVirtModeType=default&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=chr",max(as.numeric(y$chr),na.rm = TRUE),"%3A",min((as.numeric(y$pos_hg38)),na.rm=TRUE)-53500,"%2D",max((as.numeric(y$pos_hg38)),na.rm=TRUE)+53500,"&hgsid=598506407_cis2LZUJLabCsy1N2YPEuJv8vbBZ"), target="_blank")
-    }
+    total_min<-total_min()
+    total_max<-total_max()
+    a("Take me to Genome Browser", href=paste0("https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&lastVirtModeType=default&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=chr",max(as.numeric(y$chr),na.rm = TRUE),"%3A",total_min,"%2D",total_max,"&hgsid=598506407_cis2LZUJLabCsy1N2YPEuJv8vbBZ"), target="_blank")
   })
   
   output$eqtl1<-renderUI({
     x<-snps()
     y<-dat()
+    total_min<-total_min()
+    total_max<-total_max()
     if (length(x)>1){
-      a("Take me to GTEx", href=paste0("https://www.gtexportal.org/home/browseEqtls?location=chr",max(as.numeric(y$chr),na.rm = TRUE),":",min((as.numeric(y$pos_hg38)),na.rm=TRUE),"-",max((as.numeric(y$pos_hg38)),na.rm=TRUE)), target="_blank")
+      a("Take me to GTEx", href=paste0("https://www.gtexportal.org/home/browseEqtls?location=chr",max(as.numeric(y$chr),na.rm = TRUE),":",total_min,"-",total_max), target="_blank")
     } else if (length(x)==1){
       a("Take me to GTEx", href=paste0("https://www.gtexportal.org/home/snp/",x), target="_blank")
     }
@@ -346,31 +370,21 @@ server <- function(input, output) {
   output$geneTable<-renderTable({
     ld<-dat()
     chr<-min(ld$chr,na.rm=TRUE)
-    if(nrow(ld)>1){
-      min<-min(ld$pos_hg38,na.rm=TRUE)
-      max<-max(ld$pos_hg38,na.rm=TRUE)
-    } else{
-      min<-min(ld$pos_hg38,na.rm=TRUE)-53500
-      max<-max(ld$pos_hg38,na.rm=TRUE)+53500
-    }
+    total_min<-total_min()
+    total_max<-total_max()
     
     genes<-getBM(attributes = c("hgnc_symbol","start_position","end_position"),
-                 filters=c("chromosomal_region"), values=paste0(chr,":",min,":",max),mart = ensembl54)
+                 filters=c("chromosomal_region"), values=paste0(chr,":",total_min,":",total_max),mart = ensembl54)
     return(genes)
   })
   
   output$oncoTable<-renderTable({
     ld<-dat()
     chr<-min(ld$chr,na.rm=TRUE)
-    if(nrow(ld)>1){
-    min<-min(ld$pos_hg38,na.rm=TRUE)
-    max<-max(ld$pos_hg38,na.rm=TRUE)
-    } else{
-      min<-min(ld$pos_hg38,na.rm=TRUE)-53500
-      max<-max(ld$pos_hg38,na.rm=TRUE)+53500
-    }
+    total_min<-total_min()
+    total_max<-total_max()
     
-    x<-fromJSON(paste0("http://portals.broadinstitute.org/oncotator/genes/",chr,"_",min,"_",max,"/"))
+    x<-fromJSON(paste0("http://portals.broadinstitute.org/oncotator/genes/",chr,"_",total_min,"_",total_max,"/"))
     
     genes<-as.data.frame(x[[1]])
     
@@ -389,14 +403,23 @@ server <- function(input, output) {
     ld<-dat()
     query_snps<-ld[ld$is_query_snp==1,]
     ld_snps<-ld[ld$is_query_snp==0,]
+    
+    tad<-in_tad()
 
-    x_min<-min(ld$pos_hg38,na.rm=TRUE)
-    x_max<-max(ld$pos_hg38,na.rm=TRUE)
+    total_min<-total_min()
+    total_max<-total_max()
+    
+    genes<-getBM(attributes = c("hgnc_symbol","start_position","end_position"),
+                 filters=c("chromosomal_region"), values=paste0(max(ld$chr,na.rm = TRUE),":",total_min,":",total_max),mart = ensembl54)
+    colnames(genes)<-c("Symbol","Start","End")
     
     ldBlocks<-ggplot(ld)+
       geom_segment(data=ld[ld$is_query_snp==1,],aes(x=as.vector(tapply(ld$pos_hg38, ld$query_snp_rsid, min)),y=1,xend=as.vector(tapply(ld$pos_hg38, ld$query_snp_rsid, max)),yend=1,color=as.factor(query_snp_rsid), size=30, text=paste0("SNP: ",query_snp_rsid)), alpha=0.5)+
+      geom_segment(data=genes,aes(x=Start,y=3,xend=End,yend=3,color=Symbol,size=30, text=paste0("Symbol: ",Symbol,"\n", "Start: ",Start,"\n", "End",End)),alpha=0.5)+
       geom_vline(data = query_snps, aes(xintercept=pos_hg38, text=paste0("SNP: ",query_snp_rsid))) +
-      geom_vline(data = ld_snps, aes(xintercept=pos_hg38, alpha=0.1, text=paste0("SNP: ",rsID)), color="grey")+ # add different color from query snps to make more visible?
+      #geom_vline(data = ld_snps, aes(xintercept=pos_hg38, alpha=0.1, text=paste0("SNP: ",rsID)), color="grey")+ # add different color from query snps to make more visible?
+      annotate("text",x=total_min, y=1.25, label="LD", color="purple", angle=90)+
+      annotate("text",x=total_min, y=3.25, label="Genes", color="purple", angle=90)+
       theme(legend.position = "none",axis.text.y=element_blank(),axis.title.y=element_blank(),panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
             panel.border = element_blank(),
@@ -404,40 +427,21 @@ server <- function(input, output) {
       xlab("BP") + coord_cartesian(ylim=c(0.75,3.5))+
       scale_y_continuous(breaks = c(1,2,3)) 
     
-    if(input$tadButton!=0){
-      tad<-in_tad()
-      
-      if(nrow(tad)>=1){
-        x_min<-min(c(min(ld$pos_hg38,na.rm=TRUE),min(tad$start_position)))
-      } else {x_min<-min(ld$pos_hg38,na.rm=TRUE)}
-      
-      if(nrow(tad)>=1){
-        x_max<-max(c(max(ld$pos_hg38,na.rm=TRUE),max(tad$end_position)))
-      } else {x_max<-max(ld$pos_hg38,na.rm=TRUE)}
-      
-      genes<-getBM(attributes = c("hgnc_symbol","start_position","end_position"),
-                   filters=c("chromosomal_region"), values=paste0(max(ld$chr,na.rm = TRUE),":",x_min,":",x_max),mart = ensembl54)
-      colnames(genes)<-c("Symbol","Start","End")
-      
+    if(nrow(tad)>=1){
+
       ldBlocks<-ldBlocks + 
         geom_segment(data=tad, aes(x=tad$start_position, y=2, xend=tad$end_position, yend=2, size=30, text=paste0("Start: ",start_position,"\n","End",end_position)))+
-        geom_segment(data=genes,aes(x=Start,y=3,xend=End,yend=3,color=Symbol,size=30, text=paste0("Symbol: ",Symbol,"\n", "Start: ",Start,"\n", "End",End)),alpha=0.5)+
-        annotate("text",x=x_min, y=2.25, label="TADs", color="purple", angle=90) +
-        annotate("text",x=x_min, y=1.25, label="LD", color="purple", angle=90)+
-        annotate("text",x=x_min, y=3.25, label="Genes", color="purple", angle=90)
+        annotate("text",x=total_min, y=2.25, label="TADs", color="purple", angle=90)
       
     } else {
-      x_min<-min(ld$pos_hg38,na.rm=TRUE)
-      x_max<-max(ld$pos_hg38,na.rm=TRUE)
-       
-      genes<-getBM(attributes = c("hgnc_symbol","start_position","end_position"),
-                  filters=c("chromosomal_region"), values=paste0(max(ld$chr,na.rm = TRUE),":",x_min,":",x_max),mart = ensembl54)
-      colnames(genes)<-c("Symbol","Start","End")
-      ldBlocks<-ldBlocks + geom_segment(data=genes,aes(x=Start,y=3,xend=End,yend=3,color=Symbol,size=30, text=paste0("Symbol: ",Symbol,"\n", "Start: ",Start,"\n", "End",End)),alpha=0.5)+
-        annotate("text",x=x_min, y=1.25, label="LD", color="purple", angle=90)+
-        annotate("text",x=x_min, y=3.25, label="Genes", color="purple", angle=90)
+      ldBlocks<-ldBlocks
       }
 
+    if(nrow(ld_snps)>=1){
+      ldBlocks<-ldBlocks + geom_vline(data = ld_snps, aes(xintercept=pos_hg38, alpha=0.1, text=paste0("SNP: ",rsID)), color="grey")
+    }else {
+      ldBlocks<-ldBlocks
+    }
     #return(ldBlocks)
     ggplotly(ldBlocks, tooltip="text") %>% 
       layout(autosize=TRUE)
