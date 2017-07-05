@@ -312,9 +312,9 @@ server <- function(input, output) {
     x<-snps()
     y<-dat()
     if (length(x)>1){
-      a("Take me to Genome Browser", href=paste0("https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&lastVirtModeType=default&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=chr",max(as.numeric(y$chr),na.rm = TRUE),"%3A",min(as.numeric(y$pos_hg38),na.rm=TRUE),"%2D",max(as.numeric(y$pos_hg38),na.rm=TRUE),"&hgsid=596717155_di6qMTAMSs8fhJcRiuqsjlcsIxKA"), target="_blank")
+      a("Take me to Genome Browser", href=paste0("https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&lastVirtModeType=default&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=chr",max(as.numeric(y$chr),na.rm = TRUE),"%3A",min(as.numeric(y$pos_hg38),na.rm=TRUE),"%2D",max(as.numeric(y$pos_hg38),na.rm=TRUE),"&hgsid=598506407_cis2LZUJLabCsy1N2YPEuJv8vbBZ"), target="_blank")
     }else if (length(x)==1){
-      a("Take me to Genome Browser", href=paste0("https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&lastVirtModeType=default&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=chr",max(as.numeric(y$chr),na.rm = TRUE),"%3A",min((as.numeric(y$pos_hg38)),na.rm=TRUE)-53500,"%2D",max((as.numeric(y$pos_hg38)),na.rm=TRUE)+53500,"&hgsid=596717155_di6qMTAMSs8fhJcRiuqsjlcsIxKA"), target="_blank")
+      a("Take me to Genome Browser", href=paste0("https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&lastVirtModeType=default&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=chr",max(as.numeric(y$chr),na.rm = TRUE),"%3A",min((as.numeric(y$pos_hg38)),na.rm=TRUE)-53500,"%2D",max((as.numeric(y$pos_hg38)),na.rm=TRUE)+53500,"&hgsid=598506407_cis2LZUJLabCsy1N2YPEuJv8vbBZ"), target="_blank")
     }
   })
   
