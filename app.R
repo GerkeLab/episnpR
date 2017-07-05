@@ -126,8 +126,8 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                   box(title="App Details",
                                       h5(helpText("LD is calculated from 1000 Genomes Phase 1 (http://www.internationalgenome.org), and queried from HaploReg (http://archive.broadinstitute.org/mammals/haploreg/haploreg.php)
                                                   To perform similar queries in R please check out the haploR package!
-                                                  TAD visualization comes from the Yue Lab (http://promoter.bx.psu.edu/hi-c/).
-                                                  TAD locations are based off of those defined by Dixon et al in 'Topological domains in mammalian genomes identified by analysis of chromatin interactions'"
+                                                  For TAD visualization check out the Yue Lab (http://promoter.bx.psu.edu/hi-c/).
+                                                  TAD locations are based off of those defined by Dixon et al in 'Topological domains in mammalian genomes identified by analysis of chromatin interactions'."
                                       ))),
                                   box(title="Development Team",
                                       h5(helpText("Programming: Jordan Creed, Travis Gerke")),
@@ -136,7 +136,13 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                   box(title="Other resources",
                                       h5(helpText("Aiden Lab")),
                                       a("Juicebox", href="http://www.aidenlab.org/juicebox/", target="_blank"))
-                                      ))
+                                      ),
+                                fluidRow(
+                                  box(title="Notes",
+                                      h5(helpText("If no snps are in LD above the specified threshold than a range of 53500 bp is applied to either side of the snp.
+                                                  This range is then applied to querying data from Oncotator, ENSEMBL, ClinVar and the Genome Browser.
+                                                  If snps in LD exist than the range is based on the minimum and maximum value of all snps in LD.")))
+                                ))
                                 ))
                       )
 
@@ -397,7 +403,7 @@ server <- function(input, output) {
                  filters=c("chromosomal_region"), values=paste0(max(ld$chr,na.rm = TRUE),":",x_min,":",x_max),mart = ensembl54)
     
     ldBlocks<-ggplot(ld)+
-      geom_segment(data=ld,aes(x=min(ld$pos_hg38,na.rm = TRUE),y=1,xend=max(ld$pos_hg38,na.rm = TRUE),yend=1, color=as.factor(ld$query_snp_rsid), size=30))+ 
+      geom_segment(data=ld,aes(x=min(ld$pos_hg38,na.rm = TRUE),y=1,xend=max(ld$pos_hg38,na.rm = TRUE),yend=1, color=as.factor(ld$query_snp_rsid), size=30))+ # multiple blocks for multiple query snps 
       geom_vline(data = query_snps, aes(xintercept=pos_hg38)) +
       geom_vline(data = ld_snps, aes(xintercept=pos_hg38, alpha=0.1), color="grey")+ # add different color from query snps to make more visible?
       geom_segment(data=genes,aes(x=start_position,y=3,xend=end_position,yend=3,color=hgnc_symbol,size=30),alpha=0.5)+
