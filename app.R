@@ -401,12 +401,14 @@ server <- function(input, output) {
     
     genes<-getBM(attributes = c("hgnc_symbol","start_position","end_position"),
                  filters=c("chromosomal_region"), values=paste0(max(ld$chr,na.rm = TRUE),":",x_min,":",x_max),mart = ensembl54)
+    colnames(genes)<-c("Symbol","Start","End")
     
     ldBlocks<-ggplot(ld)+
-      geom_segment(data=ld,aes(x=min(ld$pos_hg38,na.rm = TRUE),y=1,xend=max(ld$pos_hg38,na.rm = TRUE),yend=1, color=as.factor(ld$query_snp_rsid), size=30))+ # multiple blocks for multiple query snps 
-      geom_vline(data = query_snps, aes(xintercept=pos_hg38)) +
-      geom_vline(data = ld_snps, aes(xintercept=pos_hg38, alpha=0.1), color="grey")+ # add different color from query snps to make more visible?
-      geom_segment(data=genes,aes(x=start_position,y=3,xend=end_position,yend=3,color=hgnc_symbol,size=30),alpha=0.5)+
+      #geom_segment(data=ld,aes(x=min(ld$pos_hg38,na.rm = TRUE),y=1,xend=max(ld$pos_hg38,na.rm = TRUE),yend=1, color=as.factor(query_snp_rsid), size=30, text=paste0("SNP: ",ld$query_snp_rsid)), alpha=0.5)+ # multiple blocks for multiple query snps 
+      geom_segment(data=ld[ld$is_query_snp==1,],aes(x=as.vector(tapply(ld$pos_hg38, ld$query_snp_rsid, min)),y=1,xend=as.vector(tapply(ld$pos_hg38, ld$query_snp_rsid, max)),yend=1,color=as.factor(query_snp_rsid), size=30, text=paste0("SNP: ",query_snp_rsid)), alpha=0.5)+
+      geom_vline(data = query_snps, aes(xintercept=pos_hg38, text=paste0("SNP: ",query_snp_rsid))) +
+      geom_vline(data = ld_snps, aes(xintercept=pos_hg38, alpha=0.1, text=paste0("SNP: ",rsID)), color="grey")+ # add different color from query snps to make more visible?
+      geom_segment(data=genes,aes(x=Start,y=3,xend=End,yend=3,color=Symbol,size=30, text=paste0("Symbol: ",Symbol,"\n", "Start: ",Start,"\n", "End",End)),alpha=0.5)+
       annotate("text",x=x_min, y=1.25, label="LD", color="purple", angle=90)+
       annotate("text",x=x_min, y=3.25, label="Genes", color="purple", angle=90)+
       annotate("text",x=x_min, y=2.25, label="TADs", color="purple", angle=90)+
@@ -418,11 +420,11 @@ server <- function(input, output) {
       scale_y_continuous(breaks = c(1,2,3)) 
     
     if(nrow(tad)>=1){
-      ldBlocks<-ldBlocks + geom_segment(data=tad, aes(x=tad$start_position, y=2, xend=tad$end_position, yend=2, size=30))
+      ldBlocks<-ldBlocks + geom_segment(data=tad, aes(x=tad$start_position, y=2, xend=tad$end_position, yend=2, size=30, text=paste0("Start: ",start_position,"\n","End",end_position)))
     } else {ldBlocks<-ldBlocks}
 
     #return(ldBlocks)
-    ggplotly(ldBlocks) %>% 
+    ggplotly(ldBlocks, tooltip="text") %>% 
       layout(autosize=TRUE)
   })
   
