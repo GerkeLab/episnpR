@@ -26,93 +26,99 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                                          '.csv')),
                                       tags$hr(),
                                       actionButton("update1", "Perform query")),
-                                  box(title="Select Output",
-                                      selectInput("pop","Population",c("EUR","AFR","AMR","ASN"), selected="EUR"),
-                                      sliderInput("value","LD threshold",min=0,max=1,value=0.8),
-                                      br(),
-                                      checkboxGroupInput("parameters","HaploR",c("Chromosome"="chr","Position"="pos_hg38",                         
-                                                                                            "D'"="D'","Query SNP"="is_query_snp",                       
-                                                                                            "Reference allele"="ref","Alternative allele"="alt","LD(AFR)"="AFR",                        
-                                                                                            "LD(AMR)"="AMR","LD(ASN)"="ASN","LD(EUR)"="EUR",                        
-                                                                                            "GERP scores"="GERP_cons","SiPhy scores"="SiPhy_cons","Chromatin States" ="Chromatin_States",           
-                                                                                            "Imputed Chromatin States"="Chromatin_States_Imputed","Chromatin Marks"="Chromatin_Marks","DNAse"="DNAse",                      
-                                                                                            "Proteins","eQTL","GWAS study name"="gwas",                       
-                                                                                            "GRASP study name"="grasp","Motifs","GENCODE transcript ID"="GENCODE_id",                 
-                                                                                            "GENCODE gene name"="GENCODE_name","GENCODE direction"="GENCODE_direction","GENCODE distance"="GENCODE_distance",           
-                                                                                            "NCBI Reference Sequence Accession number"="RefSeq_id","NCBI Reference Sequence name"="RefSeq_name","NCBI Reference Sequence direction"="RefSeq_direction",           
-                                                                                            "NCBI Reference Sequence distance"="RefSeq_distance","Annotated proteins"="dbSNP_functional_annotation"),inline = TRUE),
-                                      br(),
-                                      checkboxGroupInput("parameters2","Regulome",c("Chromosome"="#chromosome",
-                                                                                           "Coordinates"="coordinates",
-                                                                                           "Hits"="hits", "Score"="score_anno")),
-                                      h5(helpText("Tissues")),
-                                      uiOutput("eTissues"),
-                                      br(),
-                                      checkboxGroupInput("oncoParameters","Oncotator",c("ACHILLES_Lineage_Results_Top_Genes","CCLE_By_Gene_total_mutations_in_gene",  
-                                                                                        "CGC_Cancer.Germline.Mut","CGC_Cancer.Molecular.Genetics",             
-                                                                                        "CGC_Cancer.Somatic.Mut","CGC_Cancer.Syndrome",                       
-                                                                                        "CGC_Chr","CGC_Chr.Band",                              
-                                                                                        "CGC_GeneID","CGC_Mutation.Type",                         
-                                                                                        "CGC_Name","CGC_Other.Germline.Mut",                    
-                                                                                        "CGC_Other.Syndrome.Disease","CGC_Tissue.Type",                           
-                                                                                        "CGC_Translocation.Partner","CGC_Tumour.Types...Somatic.Mutations.",     
-                                                                                        "CGC_Tumour.Types..Germline.Mutations.","COSMIC_FusionGenes_fusion_genes",           
-                                                                                        "COSMIC_Tissue_tissue_types_affected","COSMIC_Tissue_total_alterations_in_gene",   
-                                                                                        "Familial_Cancer_Genes_Reference","Familial_Cancer_Genes_Syndrome",            
-                                                                                        "Familial_Cancer_Genes_Synonym","HGNC_Accession.Numbers",                   
-                                                                                        "HGNC_Approved.Name","HGNC_CCDS.IDs",                             
-                                                                                        "HGNC_Chromosome","HGNC_Date.Modified",                        
-                                                                                        "HGNC_Date.Name.Changed","HGNC_Date.Symbol.Changed",                  
-                                                                                        "HGNC_Ensembl.Gene.ID","HGNC_Ensembl.ID.supplied.by.Ensembl.",      
-                                                                                        "HGNC_Entrez.Gene.ID","HGNC_Entrez.Gene.ID.supplied.by.NCBI.",     
-                                                                                        "HGNC_Enzyme.IDs","HGNC_Gene.family.description",              
-                                                                                        "HGNC_HGNC.ID","HGNC_Locus.Group",                          
-                                                                                        "HGNC_Locus.Type","HGNC_Name.Synonyms",                        
-                                                                                        "HGNC_OMIM.ID.supplied.by.NCBI.","HGNC_Previous.Names",                      
-                                                                                        "HGNC_Previous.Symbols","HGNC_Primary.IDs",                          
-                                                                                        "HGNC_Pubmed.IDs","HGNC_Record.Type",                          
-                                                                                        "HGNC_RefSeq.IDs","HGNC_RefSeq.supplied.by.NCBI.",            
-                                                                                        "HGNC_Secondary.IDs","HGNC_Status",                               
-                                                                                        "HGNC_Synonyms","HGNC_UCSC.ID.supplied.by.UCSC." ,           
-                                                                                        "HGNC_UniProt.ID.supplied.by.UniProt.","HGNC_VEGA.IDs",                            
-                                                                                        "HumanDNARepairGenes_Role","MutSig.Published.Results_Published_Results",
-                                                                                        "TCGAScape_Amplification_Peaks","TCGAScape_Deletion_Peaks",                  
-                                                                                        "TUMORScape_Amplification_Peaks","TUMORScape_Deletion_Peaks",                 
-                                                                                        "UniProt_AA_experimental_info","UniProt_AA_natural_variation",              
-                                                                                        "UniProt_AA_region","UniProt_AA_site",                           
-                                                                                        "UniProt_DrugBank","UniProt_GO_Biological_Process",             
-                                                                                        "UniProt_GO_Cellular_Component","UniProt_GO_Molecular_Function",            
-                                                                                        "UniProt_alt_uniprot_accessions","UniProt_uniprot_accession",                 
-                                                                                        "UniProt_uniprot_entry_name","alt_allele",                                
-                                                                                        "build","chr",                                      
-                                                                                        "class","end",                                       
-                                                                                        "gene","protein_change",                            
-                                                                                        "ref_allele","start",                                     
-                                                                                        "strand","transcripts" ), inline=TRUE)
+                                  tabBox(title="Select Output",
+                                      tabPanel("Source",
+                                               selectInput("pop","Population",c("EUR","AFR","AMR","ASN"), selected="EUR"),
+                                               sliderInput("value","LD threshold",min=0,max=1,value=0.8)),
+                                      tabPanel("HaploReg",
+                                               checkboxGroupInput("parameters","HaploR",c("Chromosome"="chr","Position"="pos_hg38",                         
+                                                                                          "D'"="D'","Query SNP"="is_query_snp",                       
+                                                                                          "Reference allele"="ref","Alternative allele"="alt","LD(AFR)"="AFR",                        
+                                                                                          "LD(AMR)"="AMR","LD(ASN)"="ASN","LD(EUR)"="EUR",                        
+                                                                                          "GERP scores"="GERP_cons","SiPhy scores"="SiPhy_cons","Chromatin States" ="Chromatin_States",           
+                                                                                          "Imputed Chromatin States"="Chromatin_States_Imputed","Chromatin Marks"="Chromatin_Marks","DNAse"="DNAse",                      
+                                                                                          "Proteins","eQTL","GWAS study name"="gwas",                       
+                                                                                          "GRASP study name"="grasp","Motifs","GENCODE transcript ID"="GENCODE_id",                 
+                                                                                          "GENCODE gene name"="GENCODE_name","GENCODE direction"="GENCODE_direction","GENCODE distance"="GENCODE_distance",           
+                                                                                          "NCBI Reference Sequence Accession number"="RefSeq_id","NCBI Reference Sequence name"="RefSeq_name","NCBI Reference Sequence direction"="RefSeq_direction",           
+                                                                                          "NCBI Reference Sequence distance"="RefSeq_distance","Annotated proteins"="dbSNP_functional_annotation"),inline = TRUE)),
+                                      tabPanel("RegulomeDB",
+                                               checkboxGroupInput("parameters2","Regulome",c("Chromosome"="#chromosome",
+                                                                                             "Coordinates"="coordinates",
+                                                                                             "Hits"="hits", "Score"="score_anno"))),
+                                      tabPanel("eQTL",
+                                               uiOutput("eTissues")),
+                                      tabPanel("Oncotator",
+                                               checkboxGroupInput("oncoParameters1","General",c("ACHILLES_Lineage_Results_Top_Genes","CCLE_By_Gene_total_mutations_in_gene",  
+                                                                                                 "COSMIC_FusionGenes_fusion_genes",           
+                                                                                                 "COSMIC_Tissue_tissue_types_affected","COSMIC_Tissue_total_alterations_in_gene",   
+                                                                                                 "Familial_Cancer_Genes_Reference","Familial_Cancer_Genes_Syndrome",            
+                                                                                                 "Familial_Cancer_Genes_Synonym","HGNC_Accession.Numbers",                   
+                                                                                                 "HumanDNARepairGenes_Role","MutSig.Published.Results_Published_Results",
+                                                                                                 "TCGAScape_Amplification_Peaks","TCGAScape_Deletion_Peaks",                  
+                                                                                                 "TUMORScape_Amplification_Peaks","TUMORScape_Deletion_Peaks",                 
+                                                                                                 "alt_allele",                                
+                                                                                                 "build","chr",                                      
+                                                                                                 "class","end",                                       
+                                                                                                 "gene","protein_change",                            
+                                                                                                 "ref_allele","start",                                     
+                                                                                                 "strand","transcripts" ), inline=TRUE),
+                                               checkboxGroupInput("oncoParameters2","Cancer Gene Census",c("CGC_Cancer.Germline.Mut","CGC_Cancer.Molecular.Genetics",             
+                                                                                                           "CGC_Cancer.Somatic.Mut","CGC_Cancer.Syndrome",                       
+                                                                                                           "CGC_Chr","CGC_Chr.Band",                              
+                                                                                                           "CGC_GeneID","CGC_Mutation.Type",                         
+                                                                                                           "CGC_Name","CGC_Other.Germline.Mut",                    
+                                                                                                           "CGC_Other.Syndrome.Disease","CGC_Tissue.Type",                           
+                                                                                                           "CGC_Translocation.Partner","CGC_Tumour.Types...Somatic.Mutations.",     
+                                                                                                           "CGC_Tumour.Types..Germline.Mutations."),inline = TRUE),
+                                               checkboxGroupInput("oncoParameters3","HUGO Gene Nomenclature Committee",c("HGNC_Approved.Name","HGNC_CCDS.IDs",                             
+                                                                                             "HGNC_Chromosome","HGNC_Date.Modified",                        
+                                                                                             "HGNC_Date.Name.Changed","HGNC_Date.Symbol.Changed",                  
+                                                                                             "HGNC_Ensembl.Gene.ID","HGNC_Ensembl.ID.supplied.by.Ensembl.",      
+                                                                                             "HGNC_Entrez.Gene.ID","HGNC_Entrez.Gene.ID.supplied.by.NCBI.",     
+                                                                                             "HGNC_Enzyme.IDs","HGNC_Gene.family.description",              
+                                                                                             "HGNC_HGNC.ID","HGNC_Locus.Group",                          
+                                                                                             "HGNC_Locus.Type","HGNC_Name.Synonyms",                        
+                                                                                             "HGNC_OMIM.ID.supplied.by.NCBI.","HGNC_Previous.Names",                      
+                                                                                             "HGNC_Previous.Symbols","HGNC_Primary.IDs",                          
+                                                                                             "HGNC_Pubmed.IDs","HGNC_Record.Type",                          
+                                                                                             "HGNC_RefSeq.IDs","HGNC_RefSeq.supplied.by.NCBI.",            
+                                                                                             "HGNC_Secondary.IDs","HGNC_Status",                               
+                                                                                             "HGNC_Synonyms","HGNC_UCSC.ID.supplied.by.UCSC." ,           
+                                                                                             "HGNC_UniProt.ID.supplied.by.UniProt.","HGNC_VEGA.IDs"), inline=TRUE),
+                                               checkboxGroupInput("oncoParameters4","UniProt",c("UniProt_AA_experimental_info","UniProt_AA_natural_variation",              
+                                                                                                "UniProt_AA_region","UniProt_AA_site",                           
+                                                                                                "UniProt_DrugBank","UniProt_GO_Biological_Process",             
+                                                                                                "UniProt_GO_Cellular_Component","UniProt_GO_Molecular_Function",            
+                                                                                                "UniProt_alt_uniprot_accessions","UniProt_uniprot_accession",                 
+                                                                                                "UniProt_uniprot_entry_name"), inline=TRUE))
                                   )
                                 ),
                                 fluidRow(
-                                  column(12,align="center",offset=3,
-                                         tabBox(title = "Output",
+                                  tabBox(title = "Variant Annotation",
                                                 tabPanel("HaploReg",
                                                          tableOutput("LDtable1")),
                                                 tabPanel("RegulomeDB",
                                                          tableOutput("LDtable2")),
-                                                tabPanel("Oncotator",
-                                                         tableOutput("oncoTable")),
-                                                tabPanel("eQTL",
-                                                         tableOutput("eTable1"),
-                                                         uiOutput("eqtl1")), 
                                                 tabPanel("TADs",
                                                          actionButton("tadButton","Look up TADs"),
                                                          textOutput("tadBoundaries"),
-                                                         uiOutput("hic1")),
-                                                tabPanel("Other",
-                                                         uiOutput("clinical1"),
-                                                         uiOutput("ucsc1")),
-                                                tabPanel("Visuals",
-                                                         withSpinner(plotlyOutput("plot1",height="450px"),color = "#00ffff", type = 6)))
-                                ))),
+                                                         uiOutput("hic1"))
+                                                ),
+                                  tabBox(title="Gene Annotation",
+                                         tabPanel("Oncotator",
+                                                  tableOutput("oncoTable")),
+                                         tabPanel("eQTL",
+                                                  tableOutput("eTable1"),
+                                                  uiOutput("eqtl1"))),
+                                  column(12,align="center",offset=3,
+                                         tabBox(title="Other",
+                                         tabPanel("Links",
+                                                  uiOutput("clinical1"),
+                                                  uiOutput("ucsc1")),
+                                         tabPanel("Visual",
+                                                  withSpinner(plotlyOutput("plot1",height="450px"),color = "#00ffff", type = 6))))
+                                )),
                         tabItem(tabName = "tab2",
                                 fluidRow(
                                   box(title="App Details",
@@ -167,7 +173,9 @@ server <- function(input, output) {
     etest3<-as.data.frame(etest3)
     etest3<-etest3[!duplicated(etest3$V2),]
     opt<-etest3$V2
+    if(nrow(etest3)>1){
     return(checkboxGroupInput("tissue","Tissues",choices=opt, inline = TRUE))
+    } else(print("No Tissues to Show"))
   })
   
   dat2<-eventReactive(input$update1,{
@@ -266,9 +274,9 @@ server <- function(input, output) {
     dat<-dat()
     etest<-unlist(strsplit(dat$eQTL,";"))
     etest2<-unlist(strsplit(etest,","))
-    etest3<-matrix(etest2,nrow=length(etest), ncol=4)
+    etest3<-matrix(etest2,nrow=length(etest), ncol=4,byrow=TRUE)
     etest3<-as.data.frame(etest3)
-    colnames(etest3)<-c("Gene","Tissue","Source","p")
+    colnames(etest3)<-c("Source","Tissue","Gene","p")
     return(etest3[etest3$Tissue %in% input$tissue,])
   })
   
@@ -329,8 +337,13 @@ server <- function(input, output) {
   output$oncoTable<-renderTable({
     ld<-dat()
     chr<-min(ld$chr,na.rm=TRUE)
+    if(nrow(ld)>1){
     min<-min(ld$pos_hg38,na.rm=TRUE)
     max<-max(ld$pos_hg38,na.rm=TRUE)
+    } else{
+      min<-min(ld$pos_hg38,na.rm=TRUE)-53500
+      max<-max(ld$pos_hg38,na.rm=TRUE)+53500
+    }
     
     x<-fromJSON(paste0("http://portals.broadinstitute.org/oncotator/genes/",chr,"_",min,"_",max,"/"))
     
@@ -341,7 +354,7 @@ server <- function(input, output) {
       genes<-rbind(genes, gene_dat)
     }
     
-    genes<-genes[,c("gene",input$oncoParameters)]
+    genes<-genes[,c("gene",input$oncoParameters1,input$oncoParameters2,input$oncoParameters3,input$oncoParameters4)]
     return(genes)
     
   })
