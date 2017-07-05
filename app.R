@@ -106,6 +106,8 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                                          uiOutput("hic1"))
                                                 ),
                                   tabBox(title="Gene Annotation",
+                                         tabPanel("ENSEMBL",
+                                                  tableOutput("geneTable")),
                                          tabPanel("Oncotator",
                                                   tableOutput("oncoTable")),
                                          tabPanel("eQTL",
@@ -332,6 +334,22 @@ server <- function(input, output) {
   output$LDtable2<-renderTable({
     x<-dat2()
     x[,c("rsid",input$parameters2)]
+  })
+  
+  output$geneTable<-renderTable({
+    ld<-dat()
+    chr<-min(ld$chr,na.rm=TRUE)
+    if(nrow(ld)>1){
+      min<-min(ld$pos_hg38,na.rm=TRUE)
+      max<-max(ld$pos_hg38,na.rm=TRUE)
+    } else{
+      min<-min(ld$pos_hg38,na.rm=TRUE)-53500
+      max<-max(ld$pos_hg38,na.rm=TRUE)+53500
+    }
+    
+    genes<-getBM(attributes = c("hgnc_symbol","start_position","end_position"),
+                 filters=c("chromosomal_region"), values=paste0(chr,":",min,":",max),mart = ensembl54)
+    return(genes)
   })
   
   output$oncoTable<-renderTable({
