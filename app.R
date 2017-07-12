@@ -3,7 +3,7 @@ library(shiny)
 library(haploR)
 library(data.table)
 library(biomaRt)
-library(ggplot2)
+#library(ggplot2)
 library(shinycssloaders)
 #library(ggrepel)
 library(plotly)
@@ -31,7 +31,7 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                                selectInput("pop","Population",c("EUR","AFR","AMR","ASN"), selected="EUR"),
                                                sliderInput("value","LD threshold",min=0,max=1,value=0.8)),
                                       tabPanel("HaploReg",
-                                               checkboxGroupInput("parameters","HaploR",c("Chromosome"="chr","Position"="pos_hg38",                         
+                                               checkboxGroupInput("parameters","HaploR",c("Chromosome"="chr","Position"="pos_hg38","r2"="r2","Query SNP"="query_snp_rsid",                        
                                                                                           "D'"="D'","Query SNP"="is_query_snp",                       
                                                                                           "Reference allele"="ref","Alternative allele"="alt","LD(AFR)"="AFR",                        
                                                                                           "LD(AMR)"="AMR","LD(ASN)"="ASN","LD(EUR)"="EUR",                        
@@ -41,11 +41,11 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                                                                           "GRASP study name"="grasp","Motifs","GENCODE transcript ID"="GENCODE_id",                 
                                                                                           "GENCODE gene name"="GENCODE_name","GENCODE direction"="GENCODE_direction","GENCODE distance"="GENCODE_distance",           
                                                                                           "NCBI Reference Sequence Accession number"="RefSeq_id","NCBI Reference Sequence name"="RefSeq_name","NCBI Reference Sequence direction"="RefSeq_direction",           
-                                                                                          "NCBI Reference Sequence distance"="RefSeq_distance","Annotated proteins"="dbSNP_functional_annotation"),inline = TRUE)),
+                                                                                          "NCBI Reference Sequence distance"="RefSeq_distance","Annotated proteins"="dbSNP_functional_annotation"),inline = TRUE, selected = c("query_snp_rsid","pos_hg38","r2"))),
                                       tabPanel("RegulomeDB",
                                                checkboxGroupInput("parameters2","Regulome",c("Chromosome"="#chromosome",
                                                                                              "Coordinates"="coordinate",
-                                                                                             "Hits"="hits", "Score"="score_anno"))),
+                                                                                             "Hits"="hits", "Score"="score_anno"), selected = c("#chromosome","coordinate","hits","score_anno"))),
                                       tabPanel("eQTL",
                                                uiOutput("eTissues")),
                                       tabPanel("Oncotator",
@@ -106,7 +106,9 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                                 ),
                                   tabBox(title="Gene Annotation",
                                          tabPanel("ENSEMBL",
-                                                  withSpinner(tableOutput("geneTable"), color="#00ffff", type = 6)),
+                                                  h5(helpText("Genes spanned by the greater of the LD or TAD region")),
+                                                  withSpinner(tableOutput("geneTable"), color="#00ffff", type = 6),
+                                                  downloadButton("geneDownload","Download")),
                                          tabPanel("Oncotator",
                                                   withSpinner(tableOutput("oncoTable"), color="#00ffff", type = 6)),
                                          tabPanel("eQTL",
@@ -118,7 +120,6 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                                   uiOutput("clinical1"),
                                                   uiOutput("ucsc1")),
                                          tabPanel("Visual",
-                                                  h5(helpText("TAD boundaries need to be calculated before being plotted!")),
                                                   withSpinner(plotlyOutput("plot1",height="450px"),color = "#00ffff", type = 6))))
                                 )),
                         tabItem(tabName = "tab2",
@@ -139,9 +140,9 @@ ui <- dashboardPage(dashboardHeader(title="episnpR"),
                                       ),
                                 fluidRow(
                                   box(title="Notes",
-                                      h5(helpText("If no snps are in LD above the specified threshold than a range of 53500 bp is applied to either side of the snp.
-                                                  This range is then applied to querying data from Oncotator, ENSEMBL, ClinVar and the Genome Browser.
-                                                  If snps in LD exist than the range is based on the minimum and maximum value of all snps in LD.")))
+                                      h5(helpText("If no SNPs are in LD above the specified threshold then a range of 53500 BP is applied to either side of the SNP.
+                                                  If SNPs in LD exist, then the range is based on the minimum and maximum BP of all SNPs in LD and the TAD region.
+                                                  This range is used for querying data from Oncotator, ENSEMBL, ClinVar and the Genome Browser.")))
                                 ))
                                 ))
                       )
@@ -319,7 +320,7 @@ server <- function(input, output) {
     total_min<-total_min()
     total_max<-total_max()
     if (length(x)>1){
-      a("Take me to HIC Browser", href=paste0("http://promoter.bx.psu.edu/hi-c/view.php?species=human&assembly=hg19&source=inside&tissue=GM12878&type=Lieberman-raw&c_url=&transfer=&chr=chr",y$chr[1],"&start=",total_min,"&end=",total_max,"&sessionID=&browser=none"), target="_blank")
+      a("Take me to HIC Browser", href=paste0("http://promoter.bx.psu.edu/hi-c/view.php?species=human&assembly=hg19&source=inside&tissue=GM12878&type=Lieberman-raw&c_url=&transfer=&chr=chr",max(as.numeric(y$chr),na.rm=TRUE),"&start=",total_min,"&end=",total_max,"&sessionID=&browser=none"), target="_blank")
     } else if (length(x)==1){
       a("Take me to HIC Browser", href=paste0("http://promoter.bx.psu.edu/hi-c/view.php?species=human&assembly=hg19&source=inside&tissue=GM12878&type=Lieberman-raw&resolution=25&c_url=&transfer=&gene=",x,"&sessionID=&browser=none"), target="_blank")
     }
@@ -358,7 +359,8 @@ server <- function(input, output) {
   output$LDtable1<-renderTable({
     x<-dat()
     #x<-x[,input$parameters]
-    x[,c("query_snp_rsid","rsID","r2",input$parameters)]
+    #x[,c("query_snp_rsid","rsID","pos_hg38","r2",input$parameters)]
+    x[,c("rsID",input$parameters)]
     #return(x[,input$parameters])
   })
   
@@ -369,7 +371,7 @@ server <- function(input, output) {
   
   output$geneTable<-renderTable({
     ld<-dat()
-    chr<-min(ld$chr,na.rm=TRUE)
+    chr<-max(as.numeric(ld$chr),na.rm=TRUE)
     total_min<-total_min()
     total_max<-total_max()
     
@@ -378,9 +380,24 @@ server <- function(input, output) {
     return(genes)
   })
   
+  output$geneDownload<-downloadHandler(
+    filename = function() { paste("geneList", '.csv', sep='') },
+    content = function(file) {
+      ld<-dat()
+      chr<-max(as.numeric(ld$chr),na.rm=TRUE)
+      total_min<-total_min()
+      total_max<-total_max()
+      
+      genes<-getBM(attributes = c("hgnc_symbol","start_position","end_position"),
+                   filters=c("chromosomal_region"), values=paste0(chr,":",total_min,":",total_max),mart = ensembl54)
+      
+      write.csv(genes, file)
+    }
+  )
+  
   output$oncoTable<-renderTable({
     ld<-dat()
-    chr<-min(ld$chr,na.rm=TRUE)
+    chr<-max(as.numeric(ld$chr),na.rm=TRUE)
     total_min<-total_min()
     total_max<-total_max()
     
@@ -401,6 +418,7 @@ server <- function(input, output) {
   output$plot1<-renderPlotly({
     # create plotting without having to search 
     ld<-dat()
+    ld<-ld[ld$pos_hg38!="",]
     query_snps<-ld[ld$is_query_snp==1,]
     ld_snps<-ld[ld$is_query_snp==0,]
     
@@ -424,8 +442,8 @@ server <- function(input, output) {
             panel.grid.minor = element_blank(),
             panel.border = element_blank(),
             panel.background = element_blank()) + 
-      xlab("BP") + coord_cartesian(ylim=c(0.75,3.5))+
-      scale_y_continuous(breaks = c(1,2,3)) 
+      xlab("BP") + coord_cartesian(ylim=c(0.75,3.5), xlim = c(total_min-50000, total_max+50000))+
+      scale_y_continuous(breaks = c(1,2,3))  
     
     if(nrow(tad)>=1){
 
